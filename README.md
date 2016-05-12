@@ -182,6 +182,7 @@ If you store sensitive information such as passwords consider hashing them, this
 |----------------------------------------------------|------------------------------------------------------------------------|
 | new FlatDB($data_path, $db_name = 'default')       | Creates a new database instance                                        |
 | table($name)                                       | Select a table to work with                                            |
+| indexes($array)                                    | Adds passed fields to table indexes       |
 | insert($data)                                      | Insert new entry to the current table                                  |
 | update($id, $data)                                 | Update entry data with the given id in the current table               |
 | remove($id)                                        | Remove entry with the given id from the current table                  |
