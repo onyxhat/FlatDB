@@ -1,6 +1,6 @@
 # FlatDB
 FlatDB is a simple flat file database designed to persist data using just PHP and flat files.
-Perfect solution when no other database available.
+Perfect solution when no other database is available.
 
 **Features:**
 - Lightweight and Secure
