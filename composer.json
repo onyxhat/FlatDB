@@ -1,0 +1,19 @@
+{
+    "name": "maxkostinevich/flatdb",
+    "type": "library",
+    "description": "Simple flat file database designed to persist data using just PHP and flat files.",
+    "keywords": ["database","db","flat file","storage","file db"],
+    "homepage": "https://github.com/maxkostinevich/FlatDB",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Max Kostinevich",
+            "email": "max.kostinevich@gmail.com",
+            "homepage": "http://maxkostinevich.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {"FlatDB\\": ""}
+    }
+}

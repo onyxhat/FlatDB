@@ -19,8 +19,27 @@ Perfect solution when no other database is available.
 FlatDB implements a method chaining API, which means that you can call one method after another like a chain, for example $object->method1()->method2()->method3()
 
 ### Installation
+
+**Using Composer**
+
+FlatDB is available to use in Composer:
 ```
-require_once('src/flatdb.php');
+"require": {
+        "maxkostinevich/flatdb": ">=1.0.0",
+        }
+```
+And then you can use it in your project:
+```
+require_once __DIR__ . '/vendor/autoload.php';
+use FlatDB\FlatDB;
+$db = new FlatDB(__DIR__ . '/data');
+```
+
+**Download and include**
+
+Otherwise you can just download flatdb.php and use it in your project:
+```
+require_once('path-to-includes/flatdb.php');
 $db = new FlatDB(__DIR__ . '/data');
 ```
 
@@ -200,7 +219,12 @@ If you store sensitive information such as passwords consider hashing them, this
 
 ## Changelog
 ```
-v1.0.0 - May 12, 2016
+v1.0.0 - June 2, 2016
+** Initial release **
+```
+
+```
+v0.0.9 - May 12, 2016
 ** Initial release **
 ```
 
