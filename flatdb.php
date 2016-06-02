@@ -23,6 +23,10 @@
  * $db->table('products')->remove(1); // delete entry with id=1
  * $db->table('products')->all(); // return all entries
  */
+
+namespace FlatDB;
+
+
 class FlatDB
 {
     /**
@@ -59,20 +63,21 @@ class FlatDB
      * @param string $db The current database in use, defaults to 'default' for
      *  production database, you can use this if you need to several databases
      */
-    public function __construct($data_path, $db = 'default') {
+    public function __construct($data_path, $db = 'default')
+    {
 
-        $this->data_dir = $data_path . '/' . $db . '/';
-        $this->indexes = array();
+        $this->data_dir   = $data_path . '/' . $db . '/';
+        $this->indexes    = array();
         $this->meta_cache = array();
-		
-		// Create data directory
-        if(!is_dir($this->data_dir)) {
-            if(!mkdir($this->data_dir)) {
+
+        // Create data directory
+        if (!is_dir($this->data_dir)) {
+            if (!mkdir($this->data_dir)) {
                 throw new Exception('Could not create database table, permission denied.');
-            }else{
-				// Add empty index.php file if directory has been created successfully
-				file_put_contents($this->data_dir . 'index.php', '<?php //Silence is golden');
-			}
+            } else {
+                // Add empty index.php file if directory has been created successfully
+                file_put_contents($this->data_dir . 'index.php', '<?php //Silence is golden');
+            }
         }
     }
 
@@ -87,13 +92,14 @@ class FlatDB
      *
      * @return object The current class instance, for chainability
      */
-    public function table($name) {
+    public function table($name)
+    {
         $this->query = new FlatDB_Query($name);
 
         // chainability
         return $this;
     }
-    
+
     /**
      * Inserts an entry to a table
      *
@@ -105,28 +111,29 @@ class FlatDB
      * @return array The inserted object, with an 'id' key, holding the unique
      *  id of this entry in the table.
      */
-    public function insert($obj) {
-        if(!is_array($obj)) {
+    public function insert($obj)
+    {
+        if (!is_array($obj)) {
             throw new Exception('Can only write arrays');
         }
 
-        if($this->query->was_run()) {
+        if ($this->query->was_run()) {
             throw new Exception('Query already ran');
         }
 
         $table = $this->query->table;
-        $id = 0;
-        $meta = null;
+        $id    = 0;
+        $meta  = null;
 
         // Find the id of the new entry
-        if(!is_dir($this->data_dir . $table)) {
+        if (!is_dir($this->data_dir . $table)) {
             // this is the first entry, create directory
-            if(!@mkdir($this->data_dir . $table, 0777)) {
+            if (!@mkdir($this->data_dir . $table, 0777)) {
                 throw new Exception('Could not create table folder, permission denied.');
-            }else{
-				// Add empty index.php file if directory has been created successfully
-				file_put_contents($this->data_dir . $table . '/' . 'index.php', '<?php //Silence is golden');
-			}
+            } else {
+                // Add empty index.php file if directory has been created successfully
+                file_put_contents($this->data_dir . $table . '/' . 'index.php', '<?php //Silence is golden');
+            }
 
             // id starts from 1
             $id = 1;
@@ -134,14 +141,14 @@ class FlatDB
             // create an empty metadata array
             $meta = array(
                 'last_id' => 0,
-                'count' => 0,
+                'count'   => 0,
                 'indexes' => array(),
             );
         } else {
             // this is not the first entry, read table metadata, and calculate
             // new id
             $meta = $this->meta();
-            $id = $meta['last_id'] + 1;
+            $id   = $meta['last_id'] + 1;
         }
 
         // add the id key to the object to be inserted
@@ -154,10 +161,10 @@ class FlatDB
         $meta['last_id'] = $id;
 
         // check for indexes
-        if(array_key_exists($table, $this->indexes)) {
+        if (array_key_exists($table, $this->indexes)) {
             // if custom indexes are defined, add them to the meta
-            foreach($this->indexes[$table] as $index) {
-                if(!$obj[$index]) {
+            foreach ($this->indexes[$table] as $index) {
+                if (!$obj[$index]) {
                     throw new Exception("Table $table has an index on $index, but trying to insert an array without that field.");
                 }
 
@@ -196,38 +203,39 @@ class FlatDB
      *
      * @return array The inserted array, with the appropiate 'id' value
      */
-    public function update($id, $val) {
-        if($this->query->was_run()) {
+    public function update($id, $val)
+    {
+        if ($this->query->was_run()) {
             throw new Exception('Query already ran');
         }
 
-        $table = $this->query->table;
+        $table      = $this->query->table;
         $entry_file = $this->data_dir . $table . '/entry_' . $id . '.php';
-        if(!file_exists($entry_file)) {
+        if (!file_exists($entry_file)) {
             throw new Exception('Could not find entry with id ' . $id);
         }
 
         // check if an index is modified
-        $meta = $this->meta();
-        $old_entry = $this->read($entry_file, false);
+        $meta           = $this->meta();
+        $old_entry      = $this->read($entry_file, false);
         $update_indexes = false;
-        $indexes = array_keys($meta['indexes']);
-        foreach($indexes as $index) {
-            if($index == 'id') {
+        $indexes        = array_keys($meta['indexes']);
+        foreach ($indexes as $index) {
+            if ($index == 'id') {
                 continue;
             }
 
-            if($old_entry[$index] != $val[$index]) {
+            if ($old_entry[$index] != $val[$index]) {
                 $update_indexes = true;
                 break;
             }
         }
 
         // if an index update is needed
-        if($update_indexes) {
+        if ($update_indexes) {
             $key = array_search($old_entry['id'], $meta['indexes']['id']);
-            foreach($indexes as $index) {
-                if($index == 'id') {
+            foreach ($indexes as $index) {
+                if ($index == 'id') {
                     continue;
                 }
 
@@ -261,30 +269,31 @@ class FlatDB
      *
      * @return object An instance of this class, for chainability
      */
-    public function remove($id) {
-        if($this->query->was_run()) {
+    public function remove($id)
+    {
+        if ($this->query->was_run()) {
             throw new Exception('Query already ran');
         }
 
         $table = $this->query->table;
 
         // if we are removing multiple entries
-        if(is_array($id)) {
-            foreach($id as $index) {
+        if (is_array($id)) {
+            foreach ($id as $index) {
                 $this->table($table)->remove($index);
             }
 
             return $this;
         }
 
-        if(!file_exists($this->data_dir . $table . '/entry_' . $id . '.php')) {
+        if (!file_exists($this->data_dir . $table . '/entry_' . $id . '.php')) {
             throw new Exception('Could not find entry with id: ' . $id);
         }
 
         $meta = $this->meta();
         // remove indexes
         $key = array_search($id, $meta['indexes']['id']);
-        foreach(array_keys($meta['indexes']) as $index) {
+        foreach (array_keys($meta['indexes']) as $index) {
             unset($meta['indexes'][$index][$key]);
         }
         // update counter
@@ -310,8 +319,9 @@ class FlatDB
      *
      * @param string $table The table which cache will be invalidated
      */
-    private function invalidate_cache($table) {
-        foreach(glob($this->data_dir . $table . '/cache_*') as $file) {
+    private function invalidate_cache($table)
+    {
+        foreach (glob($this->data_dir . $table . '/cache_*') as $file) {
             unlink($file);
         }
     }
@@ -324,9 +334,10 @@ class FlatDB
      *
      * @return array The entry with the specified id
      */
-    public function find($val, $field = 'id') {
+    public function find($val, $field = 'id')
+    {
         // If we are finding by id just read the entry
-        if($field == 'id') {
+        if ($field == 'id') {
             $this->query->id = $val;
             return $this->findById();
         }
@@ -334,14 +345,14 @@ class FlatDB
         // If we are finding by index, use the table matadata
         $meta = $this->meta();
 
-        if(!array_key_exists($field, $meta['indexes'])) {
+        if (!array_key_exists($field, $meta['indexes'])) {
             throw new Exception("The field $field is not a table index");
         }
 
         $array_idx = array_search($val, $meta['indexes'][$field]);
 
         // if the entry doesn't exist, return null
-        if(false === $array_idx) {
+        if (false === $array_idx) {
             return null;
         }
 
@@ -355,12 +366,13 @@ class FlatDB
      *
      * @param string $ord Can either be _desc_ or _asc_, for descending and
      *  ascending order respectively, by default, it's _desc_
-     * 
+     *
      * @param string $key The key used to sort entries, by default it's _id_
      *
      * @return object The current class instance, for chainability
      */
-    public function order($ord = 'DESC', $key = 'id') {
+    public function order($ord = 'DESC', $key = 'id')
+    {
         $this->query->order = array('key' => $key, 'mode' => strtoupper($ord));
 
         // chainability
@@ -374,7 +386,8 @@ class FlatDB
      *
      * @return object The current class instance, for chainability
      */
-    public function limit($limit) {
+    public function limit($limit)
+    {
         $this->query->limit = $limit;
 
         // chainability
@@ -392,7 +405,8 @@ class FlatDB
      *
      * @return object The current class instance, for chainability
      */
-    public function select($keys) {
+    public function select($keys)
+    {
         $this->query->select = $keys;
 
         // chainability
@@ -405,7 +419,8 @@ class FlatDB
      * @param int $offset How many entries to skip
      * @return object The current class instance, for chainability
      */
-    public function skip($offset) {
+    public function skip($offset)
+    {
         return $this->offset($offset);
     }
 
@@ -419,7 +434,8 @@ class FlatDB
      *
      * @return object The current class instance, for chainability
      */
-    public function offset($offset) {
+    public function offset($offset)
+    {
         $this->query->offset = $offset;
 
         // chainability
@@ -433,7 +449,8 @@ class FlatDB
      *
      * @return object The current class instance, for chainability
      */
-    public function where($arr = null) {
+    public function where($arr = null)
+    {
 
         $this->query->where = $arr;
         return $this;
@@ -444,7 +461,8 @@ class FlatDB
      *
      * @returns All the elements the query returned
      */
-    public function all() {
+    public function all()
+    {
         return $this->findAll();
     }
 
@@ -453,10 +471,11 @@ class FlatDB
      *
      * @returns The first element of the query result, or null if query returned no elements
      */
-    public function first() {
+    public function first()
+    {
         $all = $this->all();
 
-        if(count($all) == 0) {
+        if (count($all) == 0) {
             return null;
         }
 
@@ -468,12 +487,13 @@ class FlatDB
      *
      * @return The ammount of entries a table holds
      */
-    public function count() {
-        $limit = $this->query->limit;
+    public function count()
+    {
+        $limit  = $this->query->limit;
         $offset = $this->query->offset;
-        $where = $this->query->where;
+        $where  = $this->query->where;
 
-        if(!is_null($limit) || !is_null($offset) || !is_null($where)) {
+        if (!is_null($limit) || !is_null($offset) || !is_null($where)) {
             return count($this->all());
         }
 
@@ -484,18 +504,19 @@ class FlatDB
     /**
      * Gets the metadata information for a table
      *
-     * Normally not needed unless you are working with FlatDB in a very low 
+     * Normally not needed unless you are working with FlatDB in a very low
      * level.
      *
      * @return array The metadata of the selected table
      */
-    public function meta() {
+    public function meta()
+    {
         $table = $this->query->table;
 
         // if the meta was not yet loaded, load it!
-        if(!array_key_exists($table, $this->meta_cache)) {
+        if (!array_key_exists($table, $this->meta_cache)) {
             $path = $this->data_dir . $table . '/meta.php';
-            if(!file_exists($path)) {
+            if (!file_exists($path)) {
                 throw new Exception("Metadata for table $table not found");
             }
 
@@ -514,18 +535,19 @@ class FlatDB
      *
      * @return int A status code, if bigger than 0, the method was successful
      */
-    public function indexes($arr) {
+    public function indexes($arr)
+    {
         $table = $this->query->table;
 
-        if(!$table) {
+        if (!$table) {
             throw new Exception('Table not specified, cannot define indexes');
         }
 
-        if(!is_array($arr)) {
+        if (!is_array($arr)) {
             throw new Exception('Invalid indexes definition, must be an array');
         }
 
-        if(!in_array('id', $arr)) {
+        if (!in_array('id', $arr)) {
             $arr[] = 'id';
         }
 
@@ -541,15 +563,15 @@ class FlatDB
             $meta = $this->meta();
 
             // if the indexes are correct, just ignore
-            if(array_keys($meta['indexes']) === $arr) {
+            if (array_keys($meta['indexes']) === $arr) {
                 return 2;
             }
 
             // if they changed...
-            foreach($arr as $index) {
+            foreach ($arr as $index) {
                 $meta['indexes'][$index] = array();
 
-                foreach($this->table($table)->all() as $entry) {
+                foreach ($this->table($table)->all() as $entry) {
                     $meta['indexes'][$index][] = $entry[$index];
                 }
             }
@@ -566,20 +588,21 @@ class FlatDB
     /**
      * Private helper, finds an entry by id
      */
-    private function findById() {
-        if($this->query->was_run()) {
+    private function findById()
+    {
+        if ($this->query->was_run()) {
             throw new Exception('Query already ran');
         }
 
-        $table = $this->query->table;
+        $table  = $this->query->table;
         $select = $this->query->select;
-        $id = $this->query->id;
-        $path = $this->data_dir . $table . '/entry_' . $id . '.php';
+        $id     = $this->query->id;
+        $path   = $this->data_dir . $table . '/entry_' . $id . '.php';
 
         // mark query as executed
         $this->query->run();
 
-        if(file_exists($path)) {
+        if (file_exists($path)) {
             $entry = $this->read($path, false);
             return is_null($select) ? $entry : $this->selectFields($select, $entry);
         }
@@ -593,10 +616,11 @@ class FlatDB
      * @param array $select The fields desired in the output
      * @param array $entry The entry to be filtered
      */
-    private function selectFields($select, $entry) {
+    private function selectFields($select, $entry)
+    {
         $new_entry = array();
-        foreach($select as $key) {
-            if(array_key_exists($key, $entry)) {
+        foreach ($select as $key) {
+            if (array_key_exists($key, $entry)) {
                 $new_entry[$key] = $entry[$key];
             }
         }
@@ -607,23 +631,24 @@ class FlatDB
     /**
      * Helper function to find all the results of a query
      */
-    private function findAll() {
-        if($this->query->was_run()) {
+    private function findAll()
+    {
+        if ($this->query->was_run()) {
             throw new Exception('Query already ran');
         }
 
-        $table = $this->query->table;
-        $order = $this->query->order;
-        $limit = $this->query->limit;
+        $table  = $this->query->table;
+        $order  = $this->query->order;
+        $limit  = $this->query->limit;
         $offset = $this->query->offset;
-        $where = $this->query->where;
+        $where  = $this->query->where;
         $select = $this->query->select;
 
         // seek for cache
         $cache_name = sha1($table . serialize($order) . $limit . $offset . serialize($where) . serialize($select));
         $cache_file = $this->data_dir . $table . '/cache_' . $cache_name . '.php';
 
-        if(file_exists($cache_file)) {
+        if (file_exists($cache_file)) {
             // if there's a cache, just mark the query as ran and return
             $this->query->run();
             return $this->read($cache_file, false);
@@ -635,79 +660,79 @@ class FlatDB
 
         // order
         // get indexed key
-        $key = $order['key'];
-        $mode = $order['mode'];
+        $key   = $order['key'];
+        $mode  = $order['mode'];
         $index = $metadata['indexes'][$key];
 
         // If no entries... Just return null already
-        if(empty($metadata['indexes']['id'])) {
-          return null;
+        if (empty($metadata['indexes']['id'])) {
+            return null;
         }
 
         // Now sort
         $indexes_arr = array_combine($index, $metadata['indexes']['id']);
-        if($mode === 'DESC') {
+        if ($mode === 'DESC') {
             krsort($indexes_arr);
         } else {
             ksort($indexes_arr);
         }
 
         // limit and offset
-        if($limit > 0) {
+        if ($limit > 0) {
             $indexes_arr = array_slice($indexes_arr, $offset, $limit);
-        } else if($offset > 0) {
+        } else if ($offset > 0) {
             $indexes_arr = array_slice($indexes_arr, $offset);
         }
 
         $output = array();
-        $entry = null;
+        $entry  = null;
 
-        if(is_null($where)) {
-            foreach($indexes_arr as $idx => $id) {
+        if (is_null($where)) {
+            foreach ($indexes_arr as $idx => $id) {
                 $entry = $this->read($table . '/entry_' . $id . '.php');
                 // check for select
                 $output[] = is_null($select) ? $entry : $this->selectFields($select, $entry);
             }
         } else {
             // We've got a filter! Compare all entries
-            foreach($indexes_arr as $idx => $id) {
+            foreach ($indexes_arr as $idx => $id) {
                 $entry = $this->read($table . '/entry_' . $id . '.php');
-                $add = true;
+                $add   = true;
 
                 // check for closure
-                if(is_callable($where)) {
-					throw new Exception('Closure is not allowed in WHERE clause');
+                if (is_callable($where)) {
+                    throw new Exception('Closure is not allowed in WHERE clause');
                 } else {
-                  // For each entry, see if it satisfies the filters
-                  foreach($where as $key => $value) {
-                      if(array_key_exists($key, $entry) && is_array($entry[$key])) {
-                          // if the entry value is an array, use in_array
-                          if(is_array($value)) {
-                              // if the needle is also an array
-                              foreach($value as $item) {
-                                  if(!in_array($item, $entry[$key])) {
-                                      $add = false;
-                                      break;
-                                  }
-                              }
-                          } else {
-                              // if not just seek for a needle in the array
-                              if(!in_array($value, $entry[$key])) {
-                                  $add = false;
-                                  break;
-                              }
-                          }
-                      } else {
-                          // if not, just compare using ==
-                          if($entry[$key] != $value) {
-                              $add = false;
-                              break;
-                          }
-                      }
-                  }
+                    // For each entry, see if it satisfies the filters
+                    foreach ($where as $key => $value) {
+                        if (array_key_exists($key, $entry) && is_array($entry[$key])) {
+                            // if the entry value is an array, use in_array
+                            if (is_array($value)) {
+                                // if the needle is also an array
+                                foreach ($value as $item) {
+                                    if (!in_array($item, $entry[$key])) {
+                                        $add = false;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                // if not just seek for a needle in the array
+                                if (!in_array($value, $entry[$key])) {
+                                    $add = false;
+                                    break;
+                                }
+                            }
+                        } else {
+                            // if not, just compare using ==
+                            if ($entry[$key] != $value) {
+                                $add = false;
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                if($add) {
+                if ($add) {
                     $output[] = is_null($select) ? $entry : $this->selectFields($select, $entry);
                 }
             }
@@ -728,8 +753,9 @@ class FlatDB
      * @param array $obj The associative array to be saved onto the file
      * @param boolean $relative Whether the path argument is a relative path or not
      */
-    private function write($path, $obj, $relative = true) {
-        if($relative) {
+    private function write($path, $obj, $relative = true)
+    {
+        if ($relative) {
             $path = $this->data_dir . $path;
         }
 
@@ -737,15 +763,16 @@ class FlatDB
     }
 
     /**
-    * Reads an object from a file
-    *
-    * @param string $path The path where the file is located
-    * @param boolean $relative Whether the path argument is a relative path or not
-    *
-    * @returns array An associative array with the data stored in the file
-    */
-    private function read($path, $relative = true) {
-        if($relative) {
+     * Reads an object from a file
+     *
+     * @param string $path The path where the file is located
+     * @param boolean $relative Whether the path argument is a relative path or not
+     *
+     * @returns array An associative array with the data stored in the file
+     */
+    private function read($path, $relative = true)
+    {
+        if ($relative) {
             $path = $this->data_dir . $path;
         }
 
@@ -785,7 +812,7 @@ class FlatDB_Query
     public $id = 0;
 
     /**
-     * Entries must satisfy this filter 
+     * Entries must satisfy this filter
      */
     public $where = null;
 
@@ -804,7 +831,8 @@ class FlatDB_Query
      *
      * @param string $name The name of the table this query works on
      */
-    public function __construct($name) {
+    public function __construct($name)
+    {
         $this->table = $name;
         $this->order = array('key' => 'id', 'mode' => 'ASC');
     }
@@ -812,14 +840,16 @@ class FlatDB_Query
     /**
      * Mark this query as executed
      */
-    public function run() {
+    public function run()
+    {
         $this->executed = true;
     }
 
     /**
      * Whether this query was run or not
      */
-    public function was_run() {
+    public function was_run()
+    {
         return $this->executed;
     }
 }
