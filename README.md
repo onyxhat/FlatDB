@@ -220,7 +220,9 @@ If you store sensitive information such as passwords consider hashing them, this
 ## Changelog
 ```
 v1.0.0 - June 2, 2016
-** Initial release **
+  - Add composer support;
+  - Change code formatting according to PSR-4;
+  - Add namespace;
 ```
 
 ```
