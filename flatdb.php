@@ -132,7 +132,7 @@ class FlatDB
         // Find the id of the new entry
         if (!is_dir($this->data_dir . $table)) {
             // this is the first entry, create directory
-            if (!@mkdir($this->data_dir . $table, 0777)) {
+            if ($this->createTable($table)) {
                 throw new Exception('Could not create table folder, permission denied.');
             } else {
                 // Add empty index.php file if directory has been created successfully
@@ -782,6 +782,16 @@ class FlatDB
 
         $contents = file_get_contents($path);
         return unserialize(substr($contents, 16));
+    }
+
+    /**
+     * @param $table
+     *
+     * @return bool
+     */
+    private function createTable($table)
+    {
+        return ! @mkdir($this->data_dir . $table, 0777);
     }
 }
 
