@@ -1,5 +1,5 @@
 {
-  "name": "maxkostinevich/flatdb",
+  "name": "unamatasanatarai/flatdb",
   "type": "library",
   "description": "Simple flat file database designed to persist data using just PHP and flat files.",
   "keywords": [
