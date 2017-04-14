@@ -7,9 +7,9 @@
  * http://github.com/maxkostinevich/flatdb/
  * https://maxkostinevich.com
  *
- * @author Max Kostinevich <hello@maxkostinevich.com>
+ * @author    Max Kostinevich <hello@maxkostinevich.com>
  * @copyright 2016 Max Kostinevich
- * @license MIT License
+ * @license   MIT License
  */
 
 /**
@@ -33,6 +33,7 @@ use Exception;
 
 class FlatDB
 {
+
     /**
      * The path where database files will be stored
      */
@@ -62,21 +63,21 @@ class FlatDB
      * Creates a new database instance
      *
      * @param string $data_path The path where the database files will
-     *  be stored, can be any path as long as write permissions are granted.
+     *                          be stored, can be any path as long as write permissions are granted.
      *
-     * @param string $db The current database in use, defaults to 'default' for
-     *  production database, you can use this if you need to several databases
+     * @param string $db        The current database in use, defaults to 'default' for
+     *                          production database, you can use this if you need to several databases
      */
     public function __construct($data_path, $db = 'default')
     {
 
         $this->data_dir   = $data_path . '/' . $db . '/';
-        $this->indexes    = array();
-        $this->meta_cache = array();
+        $this->indexes    = [];
+        $this->meta_cache = [];
 
         // Create data directory
-        if (!is_dir($this->data_dir)) {
-            if (!mkdir($this->data_dir)) {
+        if ( ! is_dir($this->data_dir)) {
+            if ( ! mkdir($this->data_dir)) {
                 throw new Exception('Could not create database table, permission denied.');
             } else {
                 // Add empty index.php file if directory has been created successfully
@@ -92,7 +93,7 @@ class FlatDB
      * called on every query.
      *
      * @param string $name The name of the table to work with, if not created
-     *  yet, it will be created when inserting data.
+     *                     yet, it will be created when inserting data.
      *
      * @return object The current class instance, for chainability
      */
@@ -117,7 +118,7 @@ class FlatDB
      */
     public function insert($obj)
     {
-        if (!is_array($obj)) {
+        if ( ! is_array($obj)) {
             throw new Exception('Can only write arrays');
         }
 
@@ -130,24 +131,9 @@ class FlatDB
         $meta  = null;
 
         // Find the id of the new entry
-        if (!is_dir($this->data_dir . $table)) {
+        if ( ! is_dir($this->data_dir . $table)) {
             // this is the first entry, create directory
-            if ($this->createTable($table)) {
-                throw new Exception('Could not create table folder, permission denied.');
-            } else {
-                // Add empty index.php file if directory has been created successfully
-                file_put_contents($this->data_dir . $table . '/' . 'index.php', '<?php //Silence is golden');
-            }
-
-            // id starts from 1
-            $id = 1;
-
-            // create an empty metadata array
-            $meta = array(
-                'last_id' => 0,
-                'count'   => 0,
-                'indexes' => array(),
-            );
+            list($id, $meta) = $this->createTable($table);
         } else {
             // this is not the first entry, read table metadata, and calculate
             // new id
@@ -167,12 +153,14 @@ class FlatDB
         // check for indexes
         if (array_key_exists($table, $this->indexes)) {
             // if custom indexes are defined, add them to the meta
-            foreach ($this->indexes[$table] as $index) {
-                if (!$obj[$index]) {
-                    throw new Exception("Table $table has an index on $index, but trying to insert an array without that field.");
+            foreach ($this->indexes[ $table ] as $index) {
+                if ( ! $obj[ $index ]) {
+                    throw new Exception(
+                        "Table $table has an index on $index, but trying to insert an array without that field."
+                    );
                 }
 
-                $meta['indexes'][$index][] = $obj[$index];
+                $meta['indexes'][ $index ][] = $obj[ $index ];
             }
         } else {
             // if there are no custom indexes, just add the id to the meta
@@ -181,7 +169,7 @@ class FlatDB
 
         $meta['count'] = $meta['count'] + 1;
         $this->write($table . '/meta.php', $meta);
-        $this->meta_cache[$table] = $meta;
+        $this->meta_cache[ $table ] = $meta;
 
         // invalidate cache
         $this->invalidate_cache($table);
@@ -199,11 +187,11 @@ class FlatDB
      * Updates an entry from a table, which must be selected using the _table_
      * method.
      *
-     * @param int $id The id of the entry to update
+     * @param int   $id  The id of the entry to update
      *
      * @param array $val The new values of the entry, it's important to note
-     *  that you must specify _all_ values, as this array actually replaces the
-     *  old one
+     *                   that you must specify _all_ values, as this array actually replaces the
+     *                   old one
      *
      * @return array The inserted array, with the appropiate 'id' value
      */
@@ -215,7 +203,7 @@ class FlatDB
 
         $table      = $this->query->table;
         $entry_file = $this->data_dir . $table . '/entry_' . $id . '.php';
-        if (!file_exists($entry_file)) {
+        if ( ! file_exists($entry_file)) {
             throw new Exception('Could not find entry with id ' . $id);
         }
 
@@ -229,7 +217,7 @@ class FlatDB
                 continue;
             }
 
-            if ($old_entry[$index] != $val[$index]) {
+            if ($old_entry[ $index ] != $val[ $index ]) {
                 $update_indexes = true;
                 break;
             }
@@ -243,11 +231,11 @@ class FlatDB
                     continue;
                 }
 
-                $meta['indexes'][$index][$key] = $val[$index];
+                $meta['indexes'][ $index ][ $key ] = $val[ $index ];
             }
 
             $this->write($table . '/meta.php', $meta);
-            $this->meta_cache[$table] = $meta;
+            $this->meta_cache[ $table ] = $meta;
         }
 
         // id cannot be changed
@@ -290,7 +278,7 @@ class FlatDB
             return $this;
         }
 
-        if (!file_exists($this->data_dir . $table . '/entry_' . $id . '.php')) {
+        if ( ! file_exists($this->data_dir . $table . '/entry_' . $id . '.php')) {
             throw new Exception('Could not find entry with id: ' . $id);
         }
 
@@ -298,7 +286,7 @@ class FlatDB
         // remove indexes
         $key = array_search($id, $meta['indexes']['id']);
         foreach (array_keys($meta['indexes']) as $index) {
-            unset($meta['indexes'][$index][$key]);
+            unset($meta['indexes'][ $index ][ $key ]);
         }
         // update counter
         $meta['count'] = $meta['count'] - 1;
@@ -306,7 +294,7 @@ class FlatDB
         unlink($this->data_dir . $table . '/entry_' . $id . '.php');
         // save new metadata
         $this->write($table . '/meta.php', $meta);
-        $this->meta_cache[$table] = $meta;
+        $this->meta_cache[ $table ] = $meta;
 
         // invalidate cache
         $this->invalidate_cache($table);
@@ -333,7 +321,7 @@ class FlatDB
     /**
      * Finds an entry in a table by id
      *
-     * @param int $val The id of the entry to look for
+     * @param int    $val   The id of the entry to look for
      * @param string $field The field which must meet the value, by default it's "id"
      *
      * @return array The entry with the specified id
@@ -343,17 +331,18 @@ class FlatDB
         // If we are finding by id just read the entry
         if ($field == 'id') {
             $this->query->id = $val;
+
             return $this->findById();
         }
 
         // If we are finding by index, use the table matadata
         $meta = $this->meta();
 
-        if (!array_key_exists($field, $meta['indexes'])) {
+        if ( ! array_key_exists($field, $meta['indexes'])) {
             throw new Exception("The field $field is not a table index");
         }
 
-        $array_idx = array_search($val, $meta['indexes'][$field]);
+        $array_idx = array_search($val, $meta['indexes'][ $field ]);
 
         // if the entry doesn't exist, return null
         if (false === $array_idx) {
@@ -361,7 +350,8 @@ class FlatDB
         }
 
         // success! we got the id
-        $id = $meta['indexes']['id'][$array_idx];
+        $id = $meta['indexes']['id'][ $array_idx ];
+
         return $this->find($id);
     }
 
@@ -369,7 +359,7 @@ class FlatDB
      * Sets the order of the next query to be run
      *
      * @param string $ord Can either be _desc_ or _asc_, for descending and
-     *  ascending order respectively, by default, it's _desc_
+     *                    ascending order respectively, by default, it's _desc_
      *
      * @param string $key The key used to sort entries, by default it's _id_
      *
@@ -377,7 +367,7 @@ class FlatDB
      */
     public function order($ord = 'DESC', $key = 'id')
     {
-        $this->query->order = array('key' => $key, 'mode' => strtoupper($ord));
+        $this->query->order = [ 'key' => $key, 'mode' => strtoupper($ord) ];
 
         // chainability
         return $this;
@@ -405,7 +395,7 @@ class FlatDB
      * ones desired.
      *
      * @param array $keys An array of the entry keys to be returned by the next
-     * query
+     *                    query
      *
      * @return object The current class instance, for chainability
      */
@@ -421,6 +411,7 @@ class FlatDB
      * Alias of the offset function
      *
      * @param int $offset How many entries to skip
+     *
      * @return object The current class instance, for chainability
      */
     public function skip($offset)
@@ -457,6 +448,7 @@ class FlatDB
     {
 
         $this->query->where = $arr;
+
         return $this;
     }
 
@@ -497,11 +489,12 @@ class FlatDB
         $offset = $this->query->offset;
         $where  = $this->query->where;
 
-        if (!is_null($limit) || !is_null($offset) || !is_null($where)) {
+        if ( ! is_null($limit) || ! is_null($offset) || ! is_null($where)) {
             return count($this->all());
         }
 
         $meta = $this->meta();
+
         return $meta['count'];
     }
 
@@ -518,16 +511,16 @@ class FlatDB
         $table = $this->query->table;
 
         // if the meta was not yet loaded, load it!
-        if (!array_key_exists($table, $this->meta_cache)) {
+        if ( ! array_key_exists($table, $this->meta_cache)) {
             $path = $this->data_dir . $table . '/meta.php';
-            if (!file_exists($path)) {
+            if ( ! file_exists($path)) {
                 throw new Exception("Metadata for table $table not found");
             }
 
-            $this->meta_cache[$table] = $this->read($path, false);
+            $this->meta_cache[ $table ] = $this->read($path, false);
         }
 
-        return $this->meta_cache[$table];
+        return $this->meta_cache[ $table ];
     }
 
     /**
@@ -543,19 +536,19 @@ class FlatDB
     {
         $table = $this->query->table;
 
-        if (!$table) {
+        if ( ! $table) {
             throw new Exception('Table not specified, cannot define indexes');
         }
 
-        if (!is_array($arr)) {
+        if ( ! is_array($arr)) {
             throw new Exception('Invalid indexes definition, must be an array');
         }
 
-        if (!in_array('id', $arr)) {
+        if ( ! in_array('id', $arr)) {
             $arr[] = 'id';
         }
 
-        $this->indexes[$table] = $arr;
+        $this->indexes[ $table ] = $arr;
 
         // mark query as ran
         $this->query->run();
@@ -573,15 +566,15 @@ class FlatDB
 
             // if they changed...
             foreach ($arr as $index) {
-                $meta['indexes'][$index] = array();
+                $meta['indexes'][ $index ] = [];
 
                 foreach ($this->table($table)->all() as $entry) {
-                    $meta['indexes'][$index][] = $entry[$index];
+                    $meta['indexes'][ $index ][] = $entry[ $index ];
                 }
             }
 
             $this->write($table . '/meta.php', $meta);
-            $this->meta_cache[$table] = $meta;
+            $this->meta_cache[ $table ] = $meta;
         } catch (Exception $e) {
             // table does not exist, no need to modify metadata
         }
@@ -608,7 +601,10 @@ class FlatDB
 
         if (file_exists($path)) {
             $entry = $this->read($path, false);
-            return is_null($select) ? $entry : $this->selectFields($select, $entry);
+
+            return is_null($select)
+                ? $entry
+                : $this->selectFields($select, $entry);
         }
 
         return null;
@@ -618,14 +614,14 @@ class FlatDB
      * Helper function to filter fields in an entry
      *
      * @param array $select The fields desired in the output
-     * @param array $entry The entry to be filtered
+     * @param array $entry  The entry to be filtered
      */
     private function selectFields($select, $entry)
     {
-        $new_entry = array();
+        $new_entry = [];
         foreach ($select as $key) {
             if (array_key_exists($key, $entry)) {
-                $new_entry[$key] = $entry[$key];
+                $new_entry[ $key ] = $entry[ $key ];
             }
         }
 
@@ -655,6 +651,7 @@ class FlatDB
         if (file_exists($cache_file)) {
             // if there's a cache, just mark the query as ran and return
             $this->query->run();
+
             return $this->read($cache_file, false);
         }
 
@@ -666,7 +663,7 @@ class FlatDB
         // get indexed key
         $key   = $order['key'];
         $mode  = $order['mode'];
-        $index = $metadata['indexes'][$key];
+        $index = $metadata['indexes'][ $key ];
 
         // If no entries... Just return null already
         if (empty($metadata['indexes']['id'])) {
@@ -684,18 +681,22 @@ class FlatDB
         // limit and offset
         if ($limit > 0) {
             $indexes_arr = array_slice($indexes_arr, $offset, $limit);
-        } else if ($offset > 0) {
-            $indexes_arr = array_slice($indexes_arr, $offset);
+        } else {
+            if ($offset > 0) {
+                $indexes_arr = array_slice($indexes_arr, $offset);
+            }
         }
 
-        $output = array();
+        $output = [];
         $entry  = null;
 
         if (is_null($where)) {
             foreach ($indexes_arr as $idx => $id) {
                 $entry = $this->read($table . '/entry_' . $id . '.php');
                 // check for select
-                $output[] = is_null($select) ? $entry : $this->selectFields($select, $entry);
+                $output[] = is_null($select)
+                    ? $entry
+                    : $this->selectFields($select, $entry);
             }
         } else {
             // We've got a filter! Compare all entries
@@ -709,26 +710,26 @@ class FlatDB
                 } else {
                     // For each entry, see if it satisfies the filters
                     foreach ($where as $key => $value) {
-                        if (array_key_exists($key, $entry) && is_array($entry[$key])) {
+                        if (array_key_exists($key, $entry) && is_array($entry[ $key ])) {
                             // if the entry value is an array, use in_array
                             if (is_array($value)) {
                                 // if the needle is also an array
                                 foreach ($value as $item) {
-                                    if (!in_array($item, $entry[$key])) {
+                                    if ( ! in_array($item, $entry[ $key ])) {
                                         $add = false;
                                         break;
                                     }
                                 }
                             } else {
                                 // if not just seek for a needle in the array
-                                if (!in_array($value, $entry[$key])) {
+                                if ( ! in_array($value, $entry[ $key ])) {
                                     $add = false;
                                     break;
                                 }
                             }
                         } else {
                             // if not, just compare using ==
-                            if ($entry[$key] != $value) {
+                            if ($entry[ $key ] != $value) {
                                 $add = false;
                                 break;
                             }
@@ -737,7 +738,9 @@ class FlatDB
                 }
 
                 if ($add) {
-                    $output[] = is_null($select) ? $entry : $this->selectFields($select, $entry);
+                    $output[] = is_null($select)
+                        ? $entry
+                        : $this->selectFields($select, $entry);
                 }
             }
         }
@@ -747,14 +750,15 @@ class FlatDB
 
         // create cache
         $this->write($cache_file, $output, false);
+
         return $output;
     }
 
     /**
      * Writes an object to a file
      *
-     * @param string $path The path where the file is located
-     * @param array $obj The associative array to be saved onto the file
+     * @param string  $path     The path where the file is located
+     * @param array   $obj      The associative array to be saved onto the file
      * @param boolean $relative Whether the path argument is a relative path or not
      */
     private function write($path, $obj, $relative = true)
@@ -769,7 +773,7 @@ class FlatDB
     /**
      * Reads an object from a file
      *
-     * @param string $path The path where the file is located
+     * @param string  $path     The path where the file is located
      * @param boolean $relative Whether the path argument is a relative path or not
      *
      * @returns array An associative array with the data stored in the file
@@ -781,18 +785,42 @@ class FlatDB
         }
 
         $contents = file_get_contents($path);
+
         return unserialize(substr($contents, 16));
     }
 
     /**
      * @param $table
      *
-     * @return bool
+     * @return array
+     * @throws Exception
      */
-    private function createTable($table)
+    public function createTable($table)
     {
-        return ! @mkdir($this->data_dir . $table, 0777);
+        if ( ! @mkdir($this->data_dir . $table, 0777)) {
+            throw new Exception('Could not create table folder, permission denied.');
+        } else {
+            // Add empty index.php file if directory has been created successfully
+            file_put_contents($this->data_dir . $table . '/' . 'index.php', '<?php //Silence is golden');
+        }
+
+        // id starts from 1
+        $id = 1;
+
+        // create an empty metadata array
+        $meta = [
+            'last_id' => 0,
+            'count'   => 0,
+            'indexes' => [
+                'id' => [],
+            ],
+        ];
+
+        $this->write($table . '/meta.php', $meta);
+
+        return [ $id, $meta ];
     }
+
 }
 
 /**
@@ -800,6 +828,7 @@ class FlatDB
  */
 class FlatDB_Query
 {
+
     /**
      * The table this query works on
      */
@@ -848,7 +877,7 @@ class FlatDB_Query
     public function __construct($name)
     {
         $this->table = $name;
-        $this->order = array('key' => 'id', 'mode' => 'ASC');
+        $this->order = [ 'key' => 'id', 'mode' => 'ASC' ];
     }
 
     /**
