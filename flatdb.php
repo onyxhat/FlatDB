@@ -29,7 +29,7 @@ namespace FlatDB;
 /*
  * Added extending global Exception so exceptions can be handled inside this namespace
  */
-class Exception extends \Exception {}
+use Exception;
 
 class FlatDB
 {
